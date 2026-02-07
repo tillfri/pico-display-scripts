@@ -25,9 +25,9 @@ def status_handler(mode, status, ip):
 network_manager = NetworkManager(WIFI_CONFIG.COUNTRY, status_handler=status_handler)
 
 
-def ensure_wifi():
+async def ensure_wifi():
     if not network_manager.isconnected():
-        network_manager.connect(WIFI_CONFIG.SSID, WIFI_CONFIG.PSK)
+        await network_manager.client(WIFI_CONFIG.SSID, WIFI_CONFIG.PSK)
 
 
 # InfluxDB server details
@@ -128,8 +128,8 @@ def dynamic_update(temp, humidity, co2):
 
 
 def update():
-    # connect to WIFI
-    ensure_wifi()
+    # connect to WIFI if not already connected
+    uasyncio.get_event_loop().run_until_complete(ensure_wifi())
 
     # get readings from influxdb API
     co2_raw = query_influxdb_co2(query_co2)
