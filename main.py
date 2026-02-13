@@ -117,6 +117,25 @@ REGION_HUM = (190, 60, WIDTH, 27)
 REGION_CO2 = (190, 100, WIDTH, 27)
 
 
+def draw_static_elements():
+    """Draw static elements (labels and lines) that never change."""
+    graphics.set_update_speed(2)
+    graphics.set_thickness(3)
+    graphics.set_font("serif")
+    graphics.set_pen(0)
+
+    # Draw static labels
+    graphics.text("Celsius:", 7, 35, scale=1)
+    graphics.text("Humidity:", 7, 74, scale=1)
+    graphics.text("CO2:", 7, 115, scale=1)
+
+    # Draw separator lines
+    graphics.line(5, 54, 286, 54)
+    graphics.line(5, 93, 286, 93)
+
+    graphics.update()
+
+
 def dynamic_update(temp, humidity, co2):
     temp_changed = state["temp"] is None or abs(state["temp"] - temp) > TEMP_DELTA
 
@@ -145,41 +164,30 @@ def update():
     if temp_changed or hum_changed or co2_changed:
         graphics.set_update_speed(2)
         graphics.set_pen(15)
-        if temp_changed:
-            graphics.rectangle(*REGION_TEMP)
-            state["temp"] = rounded_temperature
 
-        if hum_changed:
-            graphics.rectangle(*REGION_HUM)
-            state["humidity"] = rounded_humidity
+        # Clear only the value regions
+        graphics.rectangle(*REGION_TEMP)
+        state["temp"] = rounded_temperature
 
-        if co2_changed:
-            graphics.rectangle(*REGION_CO2)
-            state["co2"] = co2
+        graphics.rectangle(*REGION_HUM)
+        state["humidity"] = rounded_humidity
 
-        co2_string = "CO2:        " + str(co2)
-        temp_string = "Celsius:     " + str(rounded_temperature)
-        humidity_string = "Humidity:  " + str(rounded_humidity) + "%"
+        graphics.rectangle(*REGION_CO2)
+        state["co2"] = co2
 
         graphics.rectangle(*REGION_DATE)
         graphics.update()
 
+        # Draw only the dynamic values
         graphics.set_thickness(3)
         graphics.set_font("serif")
         graphics.set_pen(0)
 
-        if temp_changed:
-            graphics.text(temp_string, 7, 35, scale=1)
+        graphics.text(str(rounded_temperature), 205, 35, scale=1)
+        graphics.text(str(rounded_humidity) + "%", 203, 74, scale=1)
+        graphics.text(str(co2), 204, 115, scale=1)
 
-        if hum_changed:
-            graphics.text(humidity_string, 7, 74, scale=1)
-
-        if co2_changed:
-            graphics.text(co2_string, 7, 115, scale=1)
-
-        graphics.line(5, 54, 286, 54)
-        graphics.line(5, 93, 286, 93)
-
+        # Draw date/time
         graphics.set_thickness(1)
         year, month, day, wd, hour, minute, second, _ = rtc.datetime()
         hms = f"{hour + 1:02}:{minute:02}:{second:02}"
@@ -211,6 +219,9 @@ except Exception as e:
 graphics.set_pen(15)
 graphics.clear()
 
+# Draw static elements once before starting the update loop
+draw_static_elements()
+
 while True:
     try:
         update()
@@ -227,4 +238,6 @@ while True:
         time.sleep(20)
         graphics.set_pen(15)
         graphics.clear()
-    time.sleep(25)
+        # Redraw static elements after clearing the screen due to error
+        draw_static_elements()
+    time.sleep(30)
