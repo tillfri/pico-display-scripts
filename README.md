@@ -60,8 +60,8 @@ Transfer the following files to your Pico W:
 
 1. **WiFi Connection**: Connects to WiFi on startup
 2. **Time Sync**: Sets RTC using NTP
-3. **Data Fetching**: Queries InfluxDB every 25 seconds for latest sensor readings
-4. **Smart Updates**: Only updates display regions where values changed significantly:
+3. **Data Fetching**: Queries InfluxDB every 30 seconds for latest sensor readings
+4. **Smart Updates**: Static labels drawn once at startup, only dynamic values refresh when changed:
    - Temperature: ±0.3°C threshold
    - Humidity: ±2.0% threshold
    - CO2: ±50 ppm threshold
@@ -88,8 +88,10 @@ Transfer the following files to your Pico W:
 
 ## Optimization Notes
 
-The current implementation uses region-based updates to minimize e-ink refresh cycles:
-- Only changed values trigger display updates
-- Configurable delta thresholds prevent unnecessary updates
-- Memory is actively managed with `gc.collect()`
-- Fast update speed (mode 2) used for partial refreshes
+The current implementation uses optimized partial updates to minimize e-ink refresh cycles:
+- **Static elements drawn once**: Labels ("Celsius:", "Humidity:", "CO2:") and separator lines are drawn only once at startup and after errors
+- **Value-only updates**: Only numeric values refresh when they change significantly
+- **Configurable delta thresholds**: Temperature ±0.3°C, Humidity ±2.0%, CO2 ±50 ppm
+- **30-second refresh interval**: Balances data freshness with display longevity
+- **Memory management**: Active garbage collection with `gc.collect()`
+- **Fast update speed**: Mode 2 used for partial refreshes
